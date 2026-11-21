@@ -440,7 +440,7 @@ document.addEventListener('mouseup',lpCancel);
 document.addEventListener('contextmenu',e=>{if(e.target.closest('.pill'))e.preventDefault()});
 let sx=0,sy=0,sw=false;
 document.addEventListener('touchstart',e=>{sw=tab==='month'&&!!e.target.closest('#list')&&!$('#sheet').classList.contains('open');if(sw){sx=e.touches[0].clientX;sy=e.touches[0].clientY}},{passive:true});
-document.addEventListener('touchend',e=>{if(!sw)return;sw=false;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)>60&&Math.abs(dx)>1.5*Math.abs(dy)){if(calView==='week'){selDay=shiftDay(selDay,dx<0?7:-7);pickedDay=null}else{mOff+=dx<0?1:-1}render();const L=$('#list');L.classList.remove('sl','sr');void L.offsetWidth;L.classList.add(dx<0?'sl':'sr')}},{passive:true});
+document.addEventListener('touchend',e=>{if(!sw)return;sw=false;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)>60&&Math.abs(dx)>1.5*Math.abs(dy)){if(calView==='week'){selDay=shiftDay(selDay,dx<0?7:-7);pickedDay=null}else{mOff+=dx<0?1:-1;pickedDay=null}render();const L=$('#list');L.classList.remove('sl','sr');void L.offsetWidth;L.classList.add(dx<0?'sl':'sr')}},{passive:true});
 async function addShop(){
   const i=$('#s-in'),t=i.value.trim();if(!t)return;i.value='';justAdded.push(t);if(mode==='shopadd')drawPanel();
   if(db){try{await db.collection('shopping').add({t,r:guess(t),done:false,at:Date.now()})}catch(e){console.error(e)}}
@@ -582,7 +582,7 @@ const weekStart=k=>shiftDay(k,-((new Date(k+'T12:00').getDay()+6)%7));
 const fsh=k=>new Date(k+'T12:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
 const monthOffOf=k=>{const a=new Date(k+'T12:00'),b=new Date(today+'T12:00');return (a.getFullYear()-b.getFullYear())*12+a.getMonth()-b.getMonth()};
 const firstOfMonth=off=>{const b=new Date();b.setDate(1);b.setMonth(b.getMonth()+off);return key(b)};
-const calSeg=()=>'<div class="seg">'+[['month','📅 Mois'],['week','🗓️ Semaine']].map(([k,l])=>'<button class="'+(calView===k?'on':'')+'" data-cview="'+k+'">'+l+'</button>').join('')+'</div>';
+const calSeg=()=>'<div class="seg">'+[['week','🗓️ Semaine'],['month','📅 Mois']].map(([k,l])=>'<button class="'+(calView===k?'on':'')+'" data-cview="'+k+'">'+l+'</button>').join('')+'</div>';
 const markOf=(vl,k)=>{if(vl.some(t=>t.kind==='vac'&&t.dateEnd&&t.date===k))return '🎒';if(schoolPeriods().some(p=>nextDay(p.dateEnd)===k))return '🏫';if(vl.some(t=>t.kind==='ferie'))return '🎉';if(vl.some(t=>t.kind==='anniv'))return '🎂';return ''};
 function cellHTML(k,d){
   const vl=forDay(k),np=vl.filter(t=>t.kind!=='vac'&&t.kind!=='ferie'),c=np.length,rc=np.some(t=>t.rep&&t.rep!=='once'),v=vl.some(t=>t.kind==='vac');
@@ -626,7 +626,9 @@ function render(){
   let h='';
   $('#today').innerHTML='';
   if(tab==='home'){
-    $('#today').innerHTML=holi.map(t=>rowHTML(t,today)).join('')+(todays.map(t=>rowHTML(t,today)).join('')||'<div class="empty">Journée libre ☀️<br>Appuyez sur + pour ajouter quelque chose.</div>');
+    const tmr=shiftDay(today,1),tmrL=forDay(tmr).filter(t=>t.kind!=='vac');
+    $('#today').innerHTML='<div class="day">Aujourd’hui</div>'+holi.map(t=>rowHTML(t,today)).join('')+(todays.map(t=>rowHTML(t,today)).join('')||'<div class="empty">Journée libre ☀️<br>Appuyez sur + pour ajouter quelque chose.</div>')
+      +'<div class="day" style="margin-top:18px">Demain</div>'+(tmrL.map(t=>rowHTML(t,tmr)).join('')||'<div class="m">Rien de prévu demain</div>');
   } else if(tab==='month'){
     const top='<div class="calbar">'+calSeg()+'</div>';
     if(calView==='week'){
@@ -642,15 +644,16 @@ function render(){
     }else{
       const base=new Date();base.setDate(1);base.setMonth(base.getMonth()+mOff);
       const y=base.getFullYear(),m=base.getMonth(),first=(base.getDay()+6)%7,nd=new Date(y,m+1,0).getDate();
-      h=top+'<div class="mnav"><span>'+base.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})+'</span></div><div class="cal">'+ORDER.map(i=>'<div class="h">'+DAYS[i][0]+'</div>').join('');
+      h=top+'<div class="mnav"><button class="navb" data-mo="-1" aria-label="Mois précédent">‹</button><span>'+base.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})+'</span><button class="navb" data-mo="1" aria-label="Mois suivant">›</button></div><div class="cal">'+ORDER.map(i=>'<div class="h">'+DAYS[i][0]+'</div>').join('');
       for(let i=0;i<first;i++)h+='<div class="cd out"></div>';
       for(let d=1;d<=nd;d++)h+=cellHTML(y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'),d);
       h+='</div>'+avRow();
       if(pickedDay){
         h+='<div class="day">'+dayTitle(pickedDay)+'</div>'+(forDay(pickedDay).filter(t=>t.kind!=='vac').map(t=>rowHTML(t,pickedDay)).join('')||'<div class="m">Rien de prévu</div>')+'<button class="link" id="up-back">‹ Revenir à la liste</button>';
       }else{
-        const ups=upcomingDays(30);
-        h+=(ups.map(k=>'<div class="day">'+dayTitle(k)+'</div>'+forDay(k).filter(t=>t.kind!=='vac').map(t=>rowHTML(t,k)).join('')).join('')||'<div class="empty">Rien de prévu</div>');
+        const mdays=[];
+        for(let d=1;d<=nd;d++){const k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');const l=forDay(k).filter(t=>t.kind!=='vac');if(l.length)mdays.push([k,l])}
+        h+=(mdays.map(([k,l])=>'<div class="day">'+dayTitle(k)+'</div>'+l.map(t=>rowHTML(t,k)).join('')).join('')||'<div class="empty">Rien de prévu en '+esc(base.toLocaleDateString('fr-FR',{month:'long'}))+'</div>');
       }
     }
   } else if(tab==='todo'){
@@ -934,6 +937,7 @@ document.addEventListener('click',async e=>{
   if(d.sck){const s=shop.find(x=>x.id===d.sck);shopPatch(s.id,{done:!s.done});return}
   if(el.id==='up-back'){pickedDay=null;render();return}
   if(d.cview){if(d.cview!==calView){if(d.cview==='week'){const shown=firstOfMonth(mOff);if(selDay.slice(0,7)!==shown.slice(0,7))selDay=mOff===0?today:shown}else{mOff=monthOffOf(selDay)}calView=d.cview;pickedDay=null;render()}return}
+  if(d.mo){mOff+=(+d.mo);pickedDay=null;render();return}
   if(d.wk){selDay=shiftDay(selDay,(+d.wk)*7);pickedDay=null;render();return}
   if(d.day){selDay=d.day;pickedDay=(pickedDay===d.day)?null:d.day;render();return}
   if(d.main){if(d.main==='cal'){selDay=today;mOff=0;pickedDay=null}tab=d.main==='cal'?'month':d.main;render();return}
