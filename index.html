@@ -489,8 +489,8 @@ function occurs(t,k){
   return (t.days||[]).includes(dk.getDay());
 }
 function forDay(k){
-  const real=tasks.filter(t=>t.kind!=='vac'&&occurs(t,k)&&(who===null||!(t.who||[]).length||t.who.includes(who)));
-  const virt=virtualFor(k).filter(t=>who===null||!(t.who||[]).length||t.who.includes(who));
+  const real=tasks.filter(t=>t.kind!=='vac'&&occurs(t,k)&&(who===null||!(t.who||[]).length||t.who.some(x=>who.includes(x))));
+  const virt=virtualFor(k).filter(t=>who===null||!(t.who||[]).length||t.who.some(x=>who.includes(x)));
   return [...virt,...real].sort((a,b)=>(!!(a.done||{})[k])-(!!(b.done||{})[k])||(a.time||'99').localeCompare(b.time||'99'));
 }
 const whoLabel=t=>(t.who&&t.who.length)?t.who.map(i=>ic(i)+esc(names[i])).join(' '):'Toute la famille';
@@ -517,7 +517,7 @@ async function remapMembers(map){
   }
 }
 let pickedDay=null;
-const avRow=()=>'<div class="avrow"><button class="av'+(who===null?' on':'')+'" data-who="all"><span class="avall">👪</span><span>Tous</span></button>'+names.map((n,i)=>'<button class="av'+(who===i?' on':(who!==null?' dim':''))+'" data-who="'+i+'">'+ic(i)+'<span>'+esc(n)+'</span></button>').join('')+'</div>';
+const avRow=()=>'<div class="avrow"><button class="av'+(who===null?' on':'')+'" data-who="all"><span class="avall">👪</span><span>Tous</span></button>'+names.map((n,i)=>'<button class="av'+(who!==null&&who.includes(i)?' on':(who!==null?' dim':''))+'" data-who="'+i+'">'+ic(i)+'<span>'+esc(n)+'</span></button>').join('')+'</div>';
 const dayTitle=k=>{const df=Math.round((new Date(k+'T12:00')-new Date(today+'T12:00'))/864e5);return df===0?'Aujourd’hui':df===1?'Demain':new Date(k+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})};
 function upcomingDays(n){const out=[];for(let i=0;i<n;i++){const d=new Date(today+'T12:00');d.setDate(d.getDate()+i);const k=key(d);if(forDay(k).some(t=>t.kind!=='vac'))out.push(k)}return out}
 const QUOTES=[
@@ -888,7 +888,7 @@ document.addEventListener('click',async e=>{
     if(mode==='setup'){try{localStorage.setItem('mifaPin',pinTyped.trim())}catch(e){}}
     const map={};items.forEach((x,pos)=>{if(x.orig>=0)map[x.orig]=pos});
     await remapMembers(map);
-    if(who!==null){const w=map[who];who=(w==null)?null:w}
+    if(who!==null){const a=who.map(x=>map[x]).filter(x=>x!=null);who=a.length?a:null}
     names=items.map(x=>x.name);cols=items.map((x,pos)=>x.col||PASTEL[pos%PASTEL.length][0]);bdays=items.map(x=>x.bday||'');zone=cfgZone;
     surfOn=cfgSurf;try{localStorage.setItem('mifaSurf',surfOn?'1':'0')}catch(e){}
     quotesOn=cfgQuotes;try{localStorage.setItem('mifaQuotes',quotesOn?'1':'0')}catch(e){}
@@ -941,7 +941,7 @@ document.addEventListener('click',async e=>{
   if(d.wk){selDay=shiftDay(selDay,(+d.wk)*7);pickedDay=null;render();return}
   if(d.day){selDay=d.day;pickedDay=(pickedDay===d.day)?null:d.day;render();return}
   if(d.main){if(d.main==='cal'){selDay=today;mOff=0;pickedDay=null}tab=d.main==='cal'?'month':d.main;render();return}
-  if(d.who){who=(d.who==='all'||who===+d.who)?null:+d.who;render();return}
+  if(d.who){if(d.who==='all'){who=null}else{const i=+d.who,a=who?[...who]:[],q=a.indexOf(i);if(q>=0)a.splice(q,1);else a.push(i);who=a.length?a:null}render();return}
   if(d.ck){const t=tasks.find(x=>x.id===d.ck),dn={...(t.done||{})};dn[d.k]=!dn[d.k];patch(t.id,{done:dn});return}
   if(d.kind){form.kind=d.kind;if(d.kind==='anniv'){form.rep='yearly';form.until=''}drawPanel();return}
   if(d.fw!==undefined){form.who=toggle(form.who,+d.fw);drawPanel();return}
