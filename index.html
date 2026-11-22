@@ -500,6 +500,7 @@ function forDay(k){
   const virt=virtualFor(k).filter(t=>who===null||!(t.who||[]).length||t.who.some(x=>who.includes(x)));
   return [...virt,...real].sort((a,b)=>(!!(a.done||{})[k])-(!!(b.done||{})[k])||(a.time||'99').localeCompare(b.time||'99'));
 }
+const isOpen=(t,k)=>!(t.done||{})[k];
 const whoLabel=t=>(t.who&&t.who.length)?t.who.map(i=>ic(i)+esc(names[i])).join(' '):'Toute la famille';
 
 /* ---------- rendu ---------- */
@@ -635,8 +636,8 @@ function render(){
   let h='';
   $('#today').innerHTML='';
   if(tab==='home'){
-    const tmr=shiftDay(today,1),tmrL=forDay(tmr).filter(t=>t.kind!=='vac');
-    $('#today').innerHTML='<div class="day">Aujourd’hui</div>'+holi.map(t=>rowHTML(t,today)).join('')+(todays.map(t=>rowHTML(t,today)).join('')||'<div class="empty">Journée libre ☀️<br>Appuyez sur + pour ajouter quelque chose.</div>')
+    const tmr=shiftDay(today,1),tmrL=forDay(tmr).filter(t=>t.kind!=='vac'&&isOpen(t,tmr)),tOpen=todays.filter(t=>isOpen(t,today));
+    $('#today').innerHTML='<div class="day">Aujourd’hui</div>'+holi.map(t=>rowHTML(t,today)).join('')+(tOpen.map(t=>rowHTML(t,today)).join('')||(todays.length?'<div class="empty">Tout est fait ✅</div>':'<div class="empty">Journée libre ☀️<br>Appuyez sur + pour ajouter quelque chose.</div>'))
       +'<div class="day" style="margin-top:18px">Demain</div>'+(tmrL.map(t=>rowHTML(t,tmr)).join('')||'<div class="m">Rien de prévu demain</div>');
   } else if(tab==='month'){
     const top='<div class="calbar">'+calSeg()+'</div>';
@@ -647,8 +648,8 @@ function render(){
       if(pickedDay){
         h+='<div class="day">'+dayTitle(pickedDay)+'</div>'+(forDay(pickedDay).filter(t=>t.kind!=='vac').map(t=>rowHTML(t,pickedDay)).join('')||'<div class="m">Rien de prévu</div>')+'<button class="link" id="up-back">‹ Revenir à la liste</button>';
       }else{
-        const wk=days7.filter(k=>forDay(k).some(t=>t.kind!=='vac'));
-        h+=(wk.map(k=>'<div class="day">'+dayTitle(k)+'</div>'+forDay(k).filter(t=>t.kind!=='vac').map(t=>rowHTML(t,k)).join('')).join('')||'<div class="empty">Rien de prévu cette semaine</div>');
+        const wk=days7.filter(k=>forDay(k).some(t=>t.kind!=='vac'&&isOpen(t,k))),wkAny=days7.some(k=>forDay(k).some(t=>t.kind!=='vac'));
+        h+=(wk.map(k=>'<div class="day">'+dayTitle(k)+'</div>'+forDay(k).filter(t=>t.kind!=='vac'&&isOpen(t,k)).map(t=>rowHTML(t,k)).join('')).join('')||'<div class="empty">'+(wkAny?'Tout est fait ✅<br>Touchez un jour pour revoir.':'Rien de prévu cette semaine')+'</div>');
       }
     }else{
       const base=new Date();base.setDate(1);base.setMonth(base.getMonth()+mOff);
@@ -660,9 +661,9 @@ function render(){
       if(pickedDay){
         h+='<div class="day">'+dayTitle(pickedDay)+'</div>'+(forDay(pickedDay).filter(t=>t.kind!=='vac').map(t=>rowHTML(t,pickedDay)).join('')||'<div class="m">Rien de prévu</div>')+'<button class="link" id="up-back">‹ Revenir à la liste</button>';
       }else{
-        const mdays=[];
-        for(let d=1;d<=nd;d++){const k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');const l=forDay(k).filter(t=>t.kind!=='vac');if(l.length)mdays.push([k,l])}
-        h+=(mdays.map(([k,l])=>'<div class="day">'+dayTitle(k)+'</div>'+l.map(t=>rowHTML(t,k)).join('')).join('')||'<div class="empty">Rien de prévu en '+esc(base.toLocaleDateString('fr-FR',{month:'long'}))+'</div>');
+        const mdays=[];let mAny=false;
+        for(let d=1;d<=nd;d++){const k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');const all=forDay(k).filter(t=>t.kind!=='vac');if(all.length)mAny=true;const l=all.filter(t=>isOpen(t,k));if(l.length)mdays.push([k,l])}
+        h+=(mdays.map(([k,l])=>'<div class="day">'+dayTitle(k)+'</div>'+l.map(t=>rowHTML(t,k)).join('')).join('')||'<div class="empty">'+(mAny?'Tout est fait ✅<br>Touchez un jour pour revoir.':'Rien de prévu en '+esc(base.toLocaleDateString('fr-FR',{month:'long'})))+'</div>');
       }
     }
   } else if(tab==='todo'){
@@ -806,14 +807,12 @@ function drawPanel0(){
     const f=form,edit=!!editId,once=f.rep==='once',rw=['weekly','biweekly'].includes(f.rep),okb=f.t.trim()&&(!rw||f.days.length);
     const seg=(attr,opts,cur)=>'<div class="seg">'+opts.map(([k,l])=>'<button class="'+(cur===k?'on':'')+'" '+attr+'="'+k+'">'+l+'</button>').join('')+'</div>';
     const segVal=['once','weekly','monthly','yearly'].includes(f.rep)?f.rep:'';
-    const bar=f.who.length?colorOf(f.who[0]):'#1f8a87';
     $('#panel').innerHTML='<h2>'+(edit?'Modifier':'Nouvel événement')+'</h2>'
-     +'<div class="pv"><i style="background:'+bar+'"></i><div class="pvb"><b id="pv-t">'+esc(f.t.trim()||'Titre de l’événement')+'</b><div class="m" id="pv-w">'+esc(pvWhen())+'</div><div class="pvav">'+(f.who.length?f.who.map(i=>ic(i)).join(''):'<span class="m">👪 Toute la famille</span>')+'</div></div></div>'
      +'<div class="fcard"><div class="trow"><input type="text" id="f-t" placeholder="Titre (ex. Dentiste, match de foot…)" value="'+esc(f.t)+'" autocomplete="off">'
      +(edit?'':'<label class="camb" aria-label="Photo">📷<input type="file" accept="image/*" capture="environment" id="f-img"></label><label class="camb" aria-label="Image">🖼️<input type="file" accept="image/*" id="f-img2"></label>')
      +'</div><div style="margin-top:10px">'+seg('data-kind',[['rdv','📅 RDV'],['sport','🏃 Activité'],['task','🧹 Tâche'],['anniv','🎂 Anniv.']],f.kind)+'</div></div>'
-     +'<div class="fcard"><label>Qui ? (rien = toute la famille)</label><div class="whos">'+names.map((n,i)=>'<button class="wbtn'+(f.who.includes(i)?' on':'')+'" data-fw="'+i+'">'+ic(i)+'<span>'+esc(n)+'</span></button>').join('')+'</div></div>'
-     +'<div class="fcard"><label>'+(once?'Quand ?':'À partir du')+'</label>'
+     +'<div class="fcard"><div class="whos" role="group" aria-label="Personnes concernées">'+names.map((n,i)=>'<button class="wbtn'+(f.who.includes(i)?' on':'')+'" data-fw="'+i+'">'+ic(i)+'<span>'+esc(n)+'</span></button>').join('')+'</div></div>'
+     +'<div class="fcard">'
      +'<div class="two"><div><label>'+(once?'Date':'Date de début')+'</label><input type="date" id="f-d" value="'+f.date+'"></div>'
      +(once?'<div><label>Fin (plusieurs jours)</label><input type="date" id="f-de" value="'+(f.dateEnd||'')+'" min="'+f.date+'"></div>':'<div><label>Jusqu’au (facultatif)</label><input type="date" id="f-u" value="'+f.until+'"></div>')+'</div>'
      +'<div class="two"><div><label>Début</label><input type="time" id="f-h" value="'+f.time+'"></div><div><label>Fin (facultatif)</label><input type="time" id="f-e" value="'+f.end+'"></div></div></div>'
