@@ -124,6 +124,11 @@ input[type=text],input[type=date],input[type=time]{width:100%;font:inherit;paddi
 .banner{font-size:.8rem;color:var(--mut);margin-bottom:10px}
 .addrow{display:flex;gap:8px;margin-bottom:12px}
 .addrow input{flex:1}
+.addrow .plus{flex:none;width:48px;height:48px;padding:0;border-radius:50%;font-size:1.8rem;line-height:1;display:flex;align-items:center;justify-content:center;align-self:center}
+.inis{display:flex;flex-wrap:wrap;gap:10px;margin:2px 0 6px}
+.ini{flex:none;width:46px;height:46px;border-radius:50%;border:2px solid var(--line);background:var(--card);padding:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ini .ic{margin:0}.ini .ic svg{width:32px;height:32px}
+.ini.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
 .addrow button{border:0;border-radius:12px;background:var(--acc);color:var(--accfg);padding:0 20px;font:inherit;font-size:1.4rem;font-weight:700;cursor:pointer}
 .pb-meteo{background:linear-gradient(135deg,#60a5fa,#2563eb)}
 .pb-surf{background:linear-gradient(135deg,#22d3ee,#0e7490)}
@@ -743,10 +748,10 @@ function drawPanel0(){
   }
   if(mode==='todoadd'){
     $('#panel').innerHTML='<h2>✅ Ajouter à la To-do list</h2>'
-     +'<div class="addrow"><input type="text" id="t-in" placeholder="Ex. appeler la mairie…" value="'+esc(form.t)+'" autocomplete="off"></div>'
-     +'<label>Pour qui ? (rien = toute la famille)</label><div class="chips">'+names.map((n,i)=>'<button class="chip'+(form.who.includes(i)?' on':'')+'" data-fw="'+i+'">'+ic(i)+esc(n)+'</button>').join('')+'</div>'
+     +'<div class="addrow"><input type="text" id="t-in" placeholder="Ex. appeler la mairie…" value="'+esc(form.t)+'" autocomplete="off"><button class="plus" id="td-go" aria-label="Ajouter à la to-do list">+</button></div>'
+     +'<label>Pour qui ? (rien = toute la famille)</label><div class="inis">'+names.map((n,i)=>'<button class="ini'+(form.who.includes(i)?' on':'')+'" data-fw="'+i+'" aria-label="'+esc(n)+'" title="'+esc(n)+'">'+ic(i)+'</button>').join('')+'</div>'
      +(justT.length?'<div class="chips">'+justT.map(x=>'<span class="chip on">✓ '+esc(x)+'</span>').join('')+'</div>':'')
-     +'<button class="go" id="td-go">Ajouter à la to-do list</button>';
+     +'';
     return;
   }
   if(mode==='delitem'){
@@ -781,9 +786,9 @@ function drawPanel0(){
   }
   if(mode==='shopadd'){
     $('#panel').innerHTML='<h2>🛒 Ajouter à la liste</h2>'
-     +'<div class="addrow"><input type="text" id="s-in" placeholder="Lait, pain, pommes…" autocomplete="off">'+(dict?'<button id="s-mic" class="mic'+(dictOn?' rec':'')+'">🎤</button>':'')+'</div>'
+     +'<div class="addrow"><input type="text" id="s-in" placeholder="Lait, pain, pommes…" autocomplete="off"><button class="plus" id="s-go" aria-label="Ajouter à la liste">+</button>'+(dict?'<button id="s-mic" class="mic'+(dictOn?' rec':'')+'">🎤</button>':'')+'</div>'
      +(justAdded.length?'<div class="chips">'+justAdded.map(x=>'<span class="chip on">✓ '+esc(x)+'</span>').join('')+'</div>':'')
-     +'<div id="hist"></div><button class="go" id="s-go">Ajouter à la liste</button>';renderHist();
+     +'<div id="hist"></div>';renderHist();
     return;
   }
   if(mode==='detail'){
