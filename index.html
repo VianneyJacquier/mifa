@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Mifa</title>
 <style>
 :root{--bg:#f6f5f1;--card:#fff;--tx:#1d1d1b;--mut:#74726b;--line:#e6e3da;--acc:#1f8a87;--accfg:#fff;
@@ -149,8 +149,8 @@ button{touch-action:manipulation;-webkit-appearance:none;appearance:none}
 input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-height:48px;max-width:100%;display:block}
 input[type=text],input[type=url],select,textarea{-webkit-appearance:none;appearance:none}
 select{min-height:48px}
-.sheet{height:100vh;height:100dvh}
-.panel{max-height:88vh;max-height:88dvh;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+.sheet{height:100vh;height:100dvh;box-sizing:border-box;padding-bottom:var(--kb,0px)}
+.panel{max-height:88vh;max-height:88dvh;max-height:min(88dvh,calc(100dvh - var(--kb,0px) - 12px));-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
 .fab,.fab.back{bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 .cd{min-height:44px}
 .ck{min-width:36px;min-height:36px}
@@ -1179,6 +1179,20 @@ $('#date').addEventListener('click',()=>{if(tab==='home'){tab='month';selDay=tod
       dict.onFinal(({text})=>{const i=$('#s-in');if(i)i.value='';addMany(text)});
     }
   }catch(e){dict=null}
+})();
+/* clavier du téléphone : remonter la fenêtre d'ajout au-dessus du clavier */
+(function(){
+  const vv=window.visualViewport;if(!vv)return;
+  let last=-1;
+  const fit=()=>{
+    const kb=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
+    const v=kb>80?kb:0;
+    if(v!==last){last=v;document.documentElement.style.setProperty('--kb',v+'px')}
+    const a=document.activeElement;
+    if(v&&a&&a.closest&&a.closest('#panel')&&a.scrollIntoView)setTimeout(()=>{try{a.scrollIntoView({block:'nearest'})}catch(e){}},60);
+  };
+  vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit);
+  document.addEventListener('focusin',()=>setTimeout(fit,250));
 })();
 loadLocal();
 render();
