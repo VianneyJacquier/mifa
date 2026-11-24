@@ -296,9 +296,29 @@ const colorOf=i=>cols[i]||PASTEL[i%PASTEL.length][0];
 const nextCol=used=>{const f=PASTEL.find(p=>!used.includes(p[0]));return f?f[0]:PASTEL[used.length%PASTEL.length][0]};
 const avatar=(c,letter)=>'<span class="ic"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="'+c+'"/><text x="16" y="21" text-anchor="middle" font-size="15" font-weight="700" fill="#4a4a48" font-family="system-ui,sans-serif">'+esc(String(letter||'?').trim().charAt(0).toUpperCase())+'</text></svg></span>';
 const ic=i=>avatar(colorOf(i),names[i]);
-const RAYONS=[['fruits','🥬','Fruits & légumes'],['frais','🧀','Frais'],['viande','🥩','Viande & poisson'],['boulang','🥖','Boulangerie'],['epicerie','🥫','Épicerie'],['boissons','🥤','Boissons'],['maison','🧴','Maison & hygiène'],['autre','🛒','Autre']];
-const GUESS=[['boulang',/pain|baguette|croissant|brioche|viennoiserie/i],['maison',/papier|lessive|savon|shampo|dentifrice|vaisselle|éponge|eponge|poubelle|déodorant|deodorant|mouchoir|essuie|brosse|couche|javel|adoucissant|nettoyant/i],['boissons',/\beau\b|jus|soda|\bvin\b|bière|biere|sirop|limonade|coca/i],['viande',/poulet|viande|steak|b[œo]uf|porc|poisson|saumon|thon|saucisse|dinde|merguez|jambon|lardon/i],['frais',/\blait\b|yaourt|fromage|beurre|[œo]ufs?\b|crème|creme|mozzarella|compote|dessert/i],['fruits',/pomme|banane|orange|citron|fruit|légume|legume|salade|tomate|carotte|courgette|poire|fraise|raisin|oignon|\bail\b|patate|avocat|champignon|concombre|poireau/i],['epicerie',/pâtes|pates|\briz\b|farine|sucre|\bsel\b|huile|conserve|céréale|cereale|biscuit|chocolat|confiture|sauce|café|cafe|\bthé\b|miel|chips|gâteau|gateau/i]];
-const guess=t=>{for(const [id,re] of GUESS)if(re.test(t))return id;return 'autre'};
+const RAYONS=[['fruits','🥬','Fruits & légumes'],['boulang','🥖','Boulangerie & pâtisserie'],['viande','🥩','Boucherie & poissonnerie'],['charcut','🥓','Charcuterie & traiteur'],['frais','🧀','Crèmerie & fromages'],['epicerie','🥫','Épicerie salée'],['sucre','🍪','Épicerie sucrée & petit-déj'],['boissons','🥤','Boissons'],['hygiene','🧴','Hygiène & beauté'],['maison','🧽','Entretien & maison'],['bebe','🍼','Bébé'],['animaux','🐾','Animaux'],['surgeles','🧊','Surgelés'],['autre','🛒','Autre']];
+const GUESS=[
+ ['sucre',/sucre glace|pain de mie|biscotte|pains? (burger|hamburger|hot ?dog|pita|brioche)|tortilla|wrap/],
+ ['epicerie',/lait de coco|petits? pois|lait (de soja|d avoine|d amande)/],
+ ['charcut',/cordon bleu|hachis parmentier|lasagne|plat cuisine/],
+ ['frais',/pate (feuilletee|brisee|sablee|a pizza)/],
+ ['boulang',/pain au chocolat|chocolatine|chouquette/],
+ ['surgeles',/surgel|\bglaces?\b|glacon|esquimau|sorbet|creme glacee|poisson pane|\bbatonnets?\b/],
+ ['bebe',/couche|\bbebe|lingette|petits? pots?|lait infantile|biberon|\btetine/],
+ ['animaux',/croquette|patee|\bchats?\b|\bchiens?\b|litiere|animaux/],
+ ['maison',/lessive|javel|vaisselle|eponge|poubelle|essuie|sopalin|papier toilette|papier wc|\bpq\b|nettoyant|adoucissant|pastilles? lave|\bampoules?\b|\bpiles?\b|aluminium|\bfilm\b|allumette|bougie|desodorisant|serpillere|detergent|vinaigre blanc|gants? menage/],
+ ['hygiene',/savon|shampo|dentifrice|brosse|deodorant|gel douche|mouchoir|coton|rasoir|creme (pour les |)(mains?|visage|solaire|hydratante)|maquillage|serviettes? hygien|tampon|protege|demaquill|parfum|vernis|pansement/],
+ ['boissons',/\beau\b|eaux|\bjus\b|soda|\bvins?\b|biere|sirop|limonade|coca|cidre|champagne|ice tea|perrier|badoit|evian|orangina|whisky|rhum|aperitif|pastis/],
+ ['sucre',/sucre|farine|chocolat|confiture|\bcafe|\bthe\b|tisane|\bmiel\b|biscuit|gateau|cereale|compote|nutella|pate a tartiner|bonbon|madeleine|levure|cacao|crepe|gaufre|cookie|brownie|muesli|sucette|chewing/],
+ ['boulang',/\bpains?\b|baguette|croissant|brioche|viennoiserie|\btartes?\b|\bflan\b|patisserie|eclair|fougasse/],
+ ['charcut',/jambon|lardon|saucisson|saucisse|chorizo|\bpate\b|rillette|salami|bacon|knack|merguez|traiteur|taboule|quiche|surimi|pizza|terrine|blanc de (poulet|dinde)|nuggets/],
+ ['viande',/poulet|viande|steak|b[oe]uf|\bporc|\bveau\b|agneau|dinde|escalope|\bcotes?\b|\broti|hache|poisson|saumon|cabillaud|colin|crevette|moules?\b|filet|canard|lapin|gambas/],
+ ['frais',/\blait\b|yaourt|yogourt|fromage|beurre|\boeufs?\b|creme|mozzarella|emmental|gruyere|comte|camembert|raclette|petits? suisses?|skyr|dessert|parmesan|feta|chevre|brie|reblochon|danette|kefir/],
+ ['fruits',/pomme|banane|orange|citron|clementine|mandarine|kiwi|fruit|legume|salade|tomate|carotte|courgette|poire|fraise|framboise|myrtille|raisin|oignon|\bail\b|echalote|patate|avocat|champignon|concombre|poireau|poivron|aubergine|brocoli|\bchoux?\b|chou-fleur|epinard|haricots? verts?|melon|pasteque|peche|abricot|cerise|ananas|mangue|radis|persil|basilic|ciboulette|coriandre|courge|potiron|navet|betterave|endive|celeri|fenouil|mache|roquette|gingembre|patate douce|prune/],
+ ['epicerie',/\bpates\b|spaghetti|tagliatelle|coquillette|\briz\b|semoule|lentille|pois chiche|\bsel\b|poivre\b|huile|vinaigre|moutarde|mayonnaise|ketchup|conserve|boite|sauce|chips|cacahuete|olive|\bthon\b|sardine|soupe|bouillon|epice|quinoa|puree|cornichon|\bmais\b|haricot|apero|crackers|curry|paprika|cumin|herbes de provence/]];
+const nrm=t=>String(t).toLowerCase().replace(/œ/g,'oe').replace(/æ/g,'ae').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’']/g,' ');
+const guess=t=>{const n=nrm(t);for(const [id,re] of GUESS)if(re.test(n))return id;return 'autre'};
+const rayOf=x=>{const g=guess(x.t);return g!=='autre'?g:(RAYONS.some(r=>r[0]===x.r)?x.r:'autre')};
 const KINDS={task:['🧹','Tâche'],rdv:['📅','RDV'],sport:['🏃','Activité'],vac:['🏖️','Vacances'],anniv:['🎂','Anniversaire']};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -323,7 +343,7 @@ function renderHist(){
 }
 async function addFromHist(h){
   justAdded.push(h.t);
-  const r=h.r||guess(h.t);
+  const r=rayOf(h);
   if(db){try{await db.collection('shopping').add({t:h.t,r,done:false,at:Date.now()})}catch(e){console.error(e)}}
   else{shop.push({t:h.t,r,done:false,id:nid()});render()}
   if(mode==='shopadd')drawPanel();
@@ -356,44 +376,64 @@ function dateIn(p){
   if(m)return {mo:+m[2],d:+m[1],y:m[3].length===2?2000+ +m[3]:+m[3]};
   return null;
 }
+// Lignes d'étiquette d'un billet ou d'une facture (« Heure et lieu », « N° de commande »…) : jamais un titre ni un lieu
+const LABEL=/^(heure|horaires?|lieu|date|dates|n°|no\b|numero|commande|commandee? par|statut|billet|prix|tarif|paiement|payee?|reference|ref\b|total|montant|adresse|qr|organisateur|participant|nom|categorie|places?)\b/;
+// Dates à ignorer : commande, achat, facture…
+const NOTEV=/commande|achat|achete|emis|emission|facture|paiement|paye le|imprime|reserve le|reservation le/;
 function parseEvents(text){
-  const lines=lignesOf(text);
+  const lines=lignesOf(text),P0=lines.map(plain);
   const reTime=/(\d{1,2})\s*[h:]\s*(\d{2})?/g;
-  const place=lines.find(l=>/\b(rue|avenue|salle|place|boulevard|lieu|adresse|chemin|route)\b/.test(plain(l)))||'';
+  const isLabel=p=>LABEL.test(p)&&p.split(' ').length<=5;
+  const place0=lines.find((l,i)=>/\b(rue|avenue|salle|place|boulevard|adresse|chemin|route|stade|gymnase|parc)\b/.test(P0[i])&&!isLabel(P0[i])&&!dateIn(P0[i]))||'';
   // 1. Un bloc par date : la date puis les lignes jusqu'à la date suivante
   const blocks=[];let cur=null;
-  for(const ln of lines){
-    const pl=plain(ln),dt=dateIn(pl);
+  lines.forEach((ln,i)=>{
+    const pl=P0[i],dt=dateIn(pl);
     if(dt){
+      const ctx=[P0[i-2]||'',P0[i-1]||'',pl.slice(0,pl.search(/\d/))].join(' ');
+      if(NOTEV.test(ctx)){cur=null;return}
       const date=isoOf(dt.y||yearFor(dt.mo,dt.d),dt.mo,dt.d);
       if(date){
-        cur={date,lines:[],time:'',end:''};
-        const times=[...pl.matchAll(reTime)];
+        cur={date,lines:[],time:'',end:'',dateEnd:'',place:''};
+        // Plage « 2 avril 2027 à 06:00 – 4 avril 2027 à 12:00 »
+        const parts=pl.split(/\s[–—-]\s|\bau\b|\bjusqu/);
+        if(parts.length>1){const d2=dateIn(parts.slice(1).join(' '));if(d2){const e=isoOf(d2.y||dt.y||yearFor(d2.mo,d2.d),d2.mo,d2.d);if(e&&e>date)cur.dateEnd=e}}
+        const noDates=pl.replace(/\b\d{4}\b/g,' ');
+        const times=[...noDates.matchAll(reTime)].filter(m=>m[2]||/h/.test(m[0]));
         cur.time=times[0]?hhmm(times[0][1],times[0][2]):'';
         cur.end=times[1]?hhmm(times[1][1],times[1][2]):'';
-        blocks.push(cur);continue;
+        // Lieu écrit après l'heure : « …à 12:00, Bretagne Sud, lieu à définir »
+        const ci=ln.indexOf(',',ln.search(/\d{1,2}\s*[h:]\s*\d{2}(?!.*\d{1,2}\s*[h:]\s*\d{2})/));
+        if(ci>0){let pc=ln.slice(ci+1);const nx=lines[i+1]||'';if(nx&&/^[a-zà-ÿ]/.test(nx)&&!dateIn(P0[i+1]))pc+=' '+nx;
+          pc=pc.replace(/,?\s*lieu\s+(a|à)\s+(definir|définir|confirmer|preciser|préciser)/i,'').replace(/^[\s,]+|[\s,.]+$/g,'');if(pc&&pc.length<80)cur.place=pc}
+        // Texte après la date sur la même ligne (planning : « 5 décembre 10h00 Match contre Nantes »)
+        const rest=ln.replace(/\b\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\b/g,' ').replace(/\d{1,2}\s*[h:]\s*\d{0,2}/g,' ').replace(/\b\d{1,4}\b/g,' ').split(',')[0].replace(/\s+/g,' ').trim();
+        const rw=plain(rest).split(' ').filter(w=>w.length>2&&!monthW(w)&&!/^(lun|mar|mer|jeu|ven|sam|dim|mon|tue|wed|thu|fri|sat|sun)/.test(w)&&!['les','le','la','des','du','au','aux'].includes(w));
+        if(rw.length&&rw.join('').length>=4&&!isLabel(plain(rest)))cur.title=rest.replace(/^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\s+/i,'').replace(/^[^A-Za-zÀ-ÿ]+/,'').replace(/^(\S+\s+)?(janv\w*|f[eé]v\w*|mars|avr\w*|mai|juin|juil\w*|ao[uû]t|sept\w*|oct\w*|nov\w*|d[eé]c\w*)\.?\s+/i,'').trim()||'';
+        if(!cur.time){const nx=plain(lines[i+1]||'');if(!dateIn(nx)){const t2=[...nx.matchAll(reTime)].filter(m=>m[2]||/h/.test(m[0]));if(t2[0]){cur.time=hhmm(t2[0][1],t2[0][2]);cur.end=t2[1]?hhmm(t2[1][1],t2[1][2]):''}}}
+        blocks.push(cur);return;
       }
     }
     if(cur)cur.lines.push(ln);
-  }
-  // 2. Titre général (captures sans date en bloc, ex. affiche)
-  const globalTitle=(lines.find(l=>{const p=plain(l);return !dateIn(p)&&!/\d\s*[h:]/.test(p)&&/[a-z]{4,}/.test(p)&&!/scheduled|coach/.test(p)})||'Événement photo').slice(0,80);
+  });
+  // 2. Titre général : première ligne de texte utile du document (ex. nom de l'événement en haut du billet)
+  const globalTitle=(lines.find((l,i)=>{const p=P0[i];return !dateIn(p)&&!/\d\s*[h:]\s*\d/.test(p)&&/[a-z]{4,}/.test(p)&&!/scheduled|coach/.test(p)&&!isLabel(p)&&!/^[a-zà-ÿ]/.test(l)})||'Événement photo').slice(0,80);
   const SKIP=/scheduled|coach|ajouter|to do|tap|plan/;
   const out=[];
   for(const b of blocks){
     const P=b.lines.map(l=>plain(l));
     // Titre de la séance : première ligne de texte utile (ex. « Wave Rider »)
-    const bt=b.lines.find((l,i)=>/[a-z]{3,}/.test(P[i])&&!SKIP.test(P[i])&&!dateIn(P[i])&&!/\d\s*[h:]/.test(P[i])&&!/\b\d{1,3}\s*m\b/.test(P[i])&&!/\d\s*\/\s*5\b/.test(P[i]));
+    const bt=b.lines.find((l,i)=>/[a-z]{3,}/.test(P[i])&&!SKIP.test(P[i])&&!isLabel(P[i])&&!/^[a-zà-ÿ]/.test(l)&&!dateIn(P[i])&&!/\d\s*[h:]/.test(P[i])&&!/\b\d{1,3}\s*m\b/.test(P[i])&&!/\d\s*\/\s*5\b/.test(P[i]));
     const dur=P.map(p=>p.match(/\b(\d{1,3})\s*m\b/)).find(Boolean);
     const inten=P.map(p=>p.match(/\b(\d(?:[.,]\d)?)\s*\/\s*5\b/)).find(Boolean);
     const zw=P.some(p=>/scheduled|coach/.test(p))||!!dur||!!inten;
-    const base=(bt||globalTitle).slice(0,80);
+    const base=(zw?(bt||globalTitle):blocks.length===1?globalTitle:(b.title||bt||globalTitle)).slice(0,80);
     const t=(zw&&inten)?base+' · '+inten[1].replace('.',',')+'/5':base;
     const rest=/^(repos|rest)/.test(plain(t));
     if(rest)continue;
     if(out.some(x=>x.date===b.date&&x.t===t))continue;
     const note=zw?[dur?dur[1]+' min':'','Zwift'].filter(Boolean).join(' · '):'';
-    out.push({t,date:b.date,time:b.time,end:b.end,place:zw?'':place,note,kind:zw?'sport':'rdv',on:!rest});
+    out.push({t,date:b.date,dateEnd:b.dateEnd,time:b.time,end:b.end,place:zw?'':(b.place||place0),note,kind:zw?'sport':'rdv',on:!rest});
   }
   return out;
 }
@@ -405,7 +445,7 @@ async function readImage(file){
   }catch(err){
     imgEvents=[];imgErr='Lecture impossible. La première utilisation demande une connexion internet pour charger le lecteur de texte. Sinon, saisissez l’événement à la main.';
   }
-  if(imgEvents.length===1&&!imgErr){const e1=imgEvents[0];Object.assign(form,{t:e1.t,kind:e1.kind||'rdv',date:e1.date,time:e1.time,end:e1.end,place:e1.place,note:e1.note});mode='ev';drawPanel();return}
+  if(imgEvents.length===1&&!imgErr){const e1=imgEvents[0];Object.assign(form,{t:e1.t,kind:e1.kind||'rdv',date:e1.date,dateEnd:e1.dateEnd||'',time:e1.time,end:e1.end,place:e1.place,note:e1.note});mode='ev';drawPanel();return}
   mode='imgres';drawPanel();
 }
 document.addEventListener('change',e=>{if((e.target.id==='f-img'||e.target.id==='f-img2')&&e.target.files[0])readImage(e.target.files[0])});
@@ -552,8 +592,8 @@ function rowHTML(t,k){
   const ext=[];if(t.dateEnd&&t.dateEnd>t.date)ext.push('du '+fs(t.date)+' au '+fs(t.dateEnd));if(t.rep!=='once')ext.push(repLabel(t));
   const row='<div class="row'+(d?' done':'')+(t.kind==='vac'?' vac':'')+(bg?' mc':'')+'"'+bg+(fixed?'':' data-sw="ev" data-id="'+t.id+'" data-k="'+k+'"')+'>'
    +'<div class="info" data-info="'+t.id+'"><div class="t"><span class="wd">'+wd+(hr?' '+hr:'')+'</span> '+(evIco(t)?evIco(t)+' ':'')+esc(t.t)
-   +(t.place?'<span class="tm"> · 📍 '+esc(t.place)+'</span>':'')+(ext.length?'<span class="tm"> · '+ext.join(' · ')+'</span>':'')+'</div>'
-   +(t.note?'<div class="m">📝 '+esc(t.note)+'</div>':'')+'</div>'+(t.place?'<a class="more" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(t.place)+'" aria-label="Ouvrir dans Maps">📍</a>':'')+'</div>';
+   +(t.place?'<span class="tm"> · '+esc(t.place)+'</span>':'')+(ext.length?'<span class="tm"> · '+ext.join(' · ')+'</span>':'')+'</div>'
+   +(t.note?'<div class="m">📝 '+esc(t.note)+'</div>':'')+'</div></div>';
   return fixed?row:swWrap(row,d);
 }
 let cfgItems=[],cfgMsg='';
@@ -719,9 +759,9 @@ function render(){
      +(dn.length?'<button class="link" id="td-clear">Retirer les tâches terminées</button>':'');
   } else if(tab==='shop'){
     const tot=shop.length,got=shop.filter(s=>s.done).length;
-    const TINT={fruits:'120,200,110',frais:'110,170,235',viande:'240,120,120',boulang:'245,190,90',epicerie:'200,160,110',boissons:'90,200,215',maison:'170,130,230',autre:'160,160,160'};
+    const TINT={fruits:'120,200,110',boulang:'245,190,90',viande:'240,120,120',charcut:'235,140,160',frais:'110,170,235',epicerie:'200,160,110',sucre:'230,150,90',boissons:'90,200,215',hygiene:'230,140,210',maison:'170,130,230',bebe:'150,200,240',animaux:'180,150,120',surgeles:'120,200,240',autre:'160,160,160'};
     h='<div class="shh"><b style="font-size:1.45rem">🛒 Ma liste</b><span>'+(tot?got+' / '+tot+' dans le panier':'Rien à acheter')+'</span></div>'+(tot?'<div class="bar2"><i style="width:'+(100*got/tot)+'%"></i></div>':'')
-     +RAYONS.map(r=>{const g=shop.filter(s=>(s.r||'autre')===r[0]).sort((a,b)=>(!!a.done)-(!!b.done));return g.length?'<div class="rc" style="background:rgba('+TINT[r[0]]+',.2);border-color:rgba('+TINT[r[0]]+',.5)"><div class="rh"><span>'+r[1]+' '+esc(r[2])+'</span><small>'+g.length+'</small></div><div class="chips2">'+g.map(s=>'<button class="pill'+(s.done?' got':'')+'" data-sck="'+s.id+'">'+esc(s.t)+'</button>').join('')+'</div></div>':''}).join('')
+     +RAYONS.map(r=>{const g=shop.filter(s=>rayOf(s)===r[0]).sort((a,b)=>(!!a.done)-(!!b.done));return g.length?'<div class="rc" style="background:rgba('+TINT[r[0]]+',.2);border-color:rgba('+TINT[r[0]]+',.5)"><div class="rh"><span>'+r[1]+' '+esc(r[2])+'</span><small>'+g.length+'</small></div><div class="chips2">'+g.map(s=>'<button class="pill'+(s.done?' got':'')+'" data-sck="'+s.id+'">'+esc(s.t)+'</button>').join('')+'</div></div>':''}).join('')
      +(!tot?'<div class="empty">Liste vide 🧺<br>Touchez le bouton + pour ajouter des articles.</div>':'')
      +(tot?'<div class="m" style="text-align:center;margin:10px 0">Astuce : appui long sur un article pour le supprimer</div>':'')
      +(got?'<button class="link" id="s-clear">Retirer les articles cochés</button>':'');
@@ -973,7 +1013,7 @@ document.addEventListener('click',async e=>{
   if(el.id==='te-save'){await saveTodoEdit();return}
   if(el.id==='te-del'){const id=tdEditId;closeSheet();if(id)await todoDel(id);return}
   if(el.id==='td-clear'){for(const x of todos.filter(y=>y.done&&todoSees(y)))await todoDel(x.id);return}
-  if(el.id==='img-ok'){const sel=imgEvents.filter(x=>x.on),w=[...form.who];closeSheet();for(const x of sel)await save({t:x.t,kind:x.kind||'rdv',ev:true,who:w,rep:'once',days:[],date:x.date,time:x.time,end:x.end,place:x.place,note:x.note,done:{}});return}
+  if(el.id==='img-ok'){const sel=imgEvents.filter(x=>x.on),w=[...form.who];closeSheet();for(const x of sel)await save({t:x.t,kind:x.kind||'rdv',ev:true,who:w,rep:'once',days:[],date:x.date,dateEnd:x.dateEnd||'',time:x.time,end:x.end,place:x.place,note:x.note,done:{}});return}
   if(el.id==='img-manual'){resetForm();editId=null;justAdded=[];form.kind='rdv';fromPick=false;mode='ev';drawPanel();return}
   if(el.id==='s-done'){closeSheet();return}
   if(d.rep){form.rep=d.rep;if((d.rep==='weekly'||d.rep==='biweekly')&&!form.days.length)form.days=[new Date((form.date||today)+'T12:00').getDay()];if(d.rep==='once')form.until='';drawPanel();return}
