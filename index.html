@@ -101,7 +101,7 @@ label.chk input{width:22px;height:22px}
 .vb{display:flex;justify-content:space-between;gap:8px;background:linear-gradient(135deg,#fff3b8,#ffe083);border:1px solid #f0cf5a;border-radius:12px;padding:8px 12px;margin-bottom:10px;color:#4a3b00;font-size:.9rem}
 .row.vac{background:rgba(255,224,102,.35);border-color:rgba(230,190,40,.6)}
 textarea{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--tx);resize:vertical}
-.row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px;margin-bottom:6px}.t .tm{font-weight:400;font-size:.85rem;color:var(--mut)}.row.mc .t .tm{color:#4a4a48}.row.mc{border-color:transparent;color:#1d1d1b}.row.mc .m{color:#4a4a48}.row.mc .more{color:#4a4a48}.row.mc.done{opacity:.65}.row.mc.done .t{color:#4a4a48}.swr{position:relative;margin-bottom:6px;border-radius:14px}.swr>.row{margin-bottom:0;position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none}.swbg{position:absolute;inset:1px;border-radius:14px;background:var(--acc);color:var(--accfg);display:none;align-items:center;justify-content:flex-end;padding-right:18px;font-weight:700;font-size:.9rem}.swr.swg .swbg{display:flex}.swr.arm .swbg{background:#16a34a;color:#fff}#swtoast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(168px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:14px;background:#1d1d1b;color:#fff;border-radius:999px;padding:10px 10px 10px 18px;font-size:.9rem;box-shadow:0 6px 18px rgba(0,0,0,.25);white-space:nowrap}#swtoast button{border:0;background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer}
+.row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px;margin-bottom:6px}.t .wd{font-weight:700;font-size:.85rem;color:var(--acc);margin-right:2px;white-space:nowrap}.row.mc .t .wd{color:#1d1d1b}.t .tm{font-weight:400;font-size:.85rem;color:var(--mut)}.row.mc .t .tm{color:#4a4a48}.row.mc{border-color:transparent;color:#1d1d1b}.row.mc .m{color:#4a4a48}.row.mc .more{color:#4a4a48}.row.mc.done{opacity:.65}.row.mc.done .t{color:#4a4a48}.swr{position:relative;margin-bottom:6px;border-radius:14px}.swr>.row{margin-bottom:0;position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none}.swbg{position:absolute;inset:1px;border-radius:14px;background:var(--acc);color:var(--accfg);display:none;align-items:center;justify-content:flex-end;padding-right:18px;font-weight:700;font-size:.9rem}.swr.swg .swbg{display:flex}.swr.arm .swbg{background:#16a34a;color:#fff}#swtoast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(168px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:14px;background:#1d1d1b;color:#fff;border-radius:999px;padding:10px 10px 10px 18px;font-size:.9rem;box-shadow:0 6px 18px rgba(0,0,0,.25);white-space:nowrap}#swtoast button{border:0;background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer}
 .ck{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:transparent;color:var(--accfg);font-size:1rem;cursor:pointer}
 .row.done .ck{background:var(--acc);border-color:var(--acc)}
 .row.done .t{text-decoration:line-through;color:var(--mut)}
@@ -306,7 +306,7 @@ function key(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'
 const today=key(new Date());
 let tasks=[], names=[], shop=[], mOff=0, selDay=today, detailId=null, dstep=0, editId=null, delKind='', delId='', lpFired=false, fromPick=false, justAdded=[], justT=[], hist=[], todos=[], wx=null, smp=null, dict=null, dictOn=false, imgEvents=[], imgErr='', db=null, tab='home', who=null, mode='add';
 let form;
-const resetForm=()=>form={t:'',kind:'task',who:[],rep:'once',days:[],date:today,time:'',end:'',place:'',note:'',until:'',dateEnd:''};
+const resetForm=()=>form={t:'',kind:'rdv',who:[],rep:'once',days:[],date:today,time:'',end:'',place:'',note:'',until:'',dateEnd:''};
 resetForm();
 let localN=0;
 const slug=t=>'h-'+String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -543,14 +543,17 @@ const isOpen=(t,k)=>!(t.done||{})[k];
 const whoLabel=t=>(t.who&&t.who.length)?t.who.map(i=>ic(i)+esc(names[i])).join(' '):'Toute la famille';
 
 /* ---------- rendu ---------- */
+const evIco=t=>t.ico||(t.kind==='anniv'?'🎂':'');
 function rowBg(t){const w=(t.who||[]).filter(i=>i>=0&&i<names.length);if(!w.length)return '';return ' style="background:'+(w.length===1?colorOf(w[0]):'linear-gradient(100deg,'+w.map(colorOf).join(',')+')')+'"'}
 function swWrap(row,done){return '<div class="swr"><div class="swbg">'+(done?'↩ À refaire':'✓ Fait')+'</div>'+row+'</div>'}
 function rowHTML(t,k){
   const d=(t.done||{})[k],fixed=(t.kind==='vac'||t.kind==='ferie'||t.virt),bg=t.kind==='vac'?'':rowBg(t);
-  const meta=[];if(t.dateEnd&&t.dateEnd>t.date)meta.push('du '+fs(t.date)+' au '+fs(t.dateEnd));if(t.time)meta.push(esc(t.time)+(t.end?'–'+esc(t.end):''));if(t.rep!=='once')meta.push(repLabel(t));
+  const wd=DAYS[new Date(k+'T12:00').getDay()],hr=t.time?esc(t.time)+(t.end?'–'+esc(t.end):''):'';
+  const ext=[];if(t.dateEnd&&t.dateEnd>t.date)ext.push('du '+fs(t.date)+' au '+fs(t.dateEnd));if(t.rep!=='once')ext.push(repLabel(t));
   const row='<div class="row'+(d?' done':'')+(t.kind==='vac'?' vac':'')+(bg?' mc':'')+'"'+bg+(fixed?'':' data-sw="ev" data-id="'+t.id+'" data-k="'+k+'"')+'>'
-   +'<div class="info" data-info="'+t.id+'"><div class="t">'+(t.ico||KINDS[t.kind||'task'][0])+' '+esc(t.t)+(meta.length?'<span class="tm"> · '+meta.join(' · ')+'</span>':'')+'</div>'
-   +(t.place?'<div class="m">📍 '+esc(t.place)+'</div>':'')+(t.note?'<div class="m">📝 '+esc(t.note)+'</div>':'')+'</div>'+(t.place?'<a class="more" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(t.place)+'" aria-label="Ouvrir dans Maps">📍</a>':'')+'</div>';
+   +'<div class="info" data-info="'+t.id+'"><div class="t"><span class="wd">'+wd+(hr?' '+hr:'')+'</span> '+(evIco(t)?evIco(t)+' ':'')+esc(t.t)
+   +(t.place?'<span class="tm"> · 📍 '+esc(t.place)+'</span>':'')+(ext.length?'<span class="tm"> · '+ext.join(' · ')+'</span>':'')+'</div>'
+   +(t.note?'<div class="m">📝 '+esc(t.note)+'</div>':'')+'</div>'+(t.place?'<a class="more" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(t.place)+'" aria-label="Ouvrir dans Maps">📍</a>':'')+'</div>';
   return fixed?row:swWrap(row,d);
 }
 let cfgItems=[],cfgMsg='';
@@ -845,7 +848,7 @@ function drawPanel0(){
   if(mode==='detail'){
     const t=tasks.find(x=>x.id===detailId);if(!t){closeSheet();return}
     const mp=t.place?'https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(t.place):'';
-    $('#panel').innerHTML='<h2>'+(t.ico||KINDS[t.kind||'task'][0])+' '+esc(t.t)+'</h2>'
+    $('#panel').innerHTML='<h2>'+(evIco(t)?evIco(t)+' ':'')+esc(t.t)+'</h2>'
      +'<div class="m">'+(t.dateEnd&&t.dateEnd>t.date?'du '+fs(t.date)+' au '+fs(t.dateEnd)+' · ':'')+(t.time?esc(t.time)+(t.end?'–'+esc(t.end):'')+' · ':'')+whoLabel(t)+'</div>'
      +(t.place?'<div class="m">📍 '+esc(t.place)+'</div>':'')+(t.note?'<div class="m">📝 '+esc(t.note)+'</div>':'')
      +(mp?'<a class="go" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="'+mp+'">📍 Ouvrir dans Google Maps</a>':'')
@@ -860,7 +863,7 @@ function drawPanel0(){
     $('#panel').innerHTML='<h2>'+(edit?'Modifier':'Nouvel événement')+'</h2>'
      +'<div class="fcard"><div class="trow"><input type="text" id="f-t" placeholder="Titre (ex. Dentiste, match de foot…)" value="'+esc(f.t)+'" autocomplete="off">'
      +(edit?'':'<label class="camb" aria-label="Photo">📷<input type="file" accept="image/*" capture="environment" id="f-img"></label><label class="camb" aria-label="Image">🖼️<input type="file" accept="image/*" id="f-img2"></label>')
-     +'</div><div style="margin-top:10px">'+seg('data-kind',[['rdv','📅 RDV'],['sport','🏃 Activité'],['task','🧹 Tâche'],['anniv','🎂 Anniv.']],f.kind)+'</div></div>'
+     +'</div></div>'
      +'<div class="fcard"><div class="whos" role="group" aria-label="Personnes concernées">'+names.map((n,i)=>'<button class="wbtn'+(f.who.includes(i)?' on':'')+'" data-fw="'+i+'">'+ic(i)+'<span>'+esc(n)+'</span></button>').join('')+'</div></div>'
      +'<div class="fcard">'
      +'<div class="two"><div><label>'+(once?'Date':'Date de début')+'</label><input type="date" id="f-d" value="'+f.date+'"></div>'
