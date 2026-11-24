@@ -101,7 +101,7 @@ label.chk input{width:22px;height:22px}
 .vb{display:flex;justify-content:space-between;gap:8px;background:linear-gradient(135deg,#fff3b8,#ffe083);border:1px solid #f0cf5a;border-radius:12px;padding:8px 12px;margin-bottom:10px;color:#4a3b00;font-size:.9rem}
 .row.vac{background:rgba(255,224,102,.35);border-color:rgba(230,190,40,.6)}
 textarea{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--tx);resize:vertical}
-.row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px}
+.row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px;margin-bottom:6px}.row.mc{border-color:transparent;color:#1d1d1b}.row.mc .m{color:#4a4a48}.row.mc .more{color:#4a4a48}.row.mc.done{opacity:.65}.row.mc.done .t{color:#4a4a48}.swr{position:relative;margin-bottom:6px;border-radius:14px}.swr>.row{margin-bottom:0;position:relative;touch-action:pan-y;-webkit-user-select:none;user-select:none}.swbg{position:absolute;inset:1px;border-radius:14px;background:var(--acc);color:var(--accfg);display:none;align-items:center;justify-content:flex-end;padding-right:18px;font-weight:700;font-size:.9rem}.swr.swg .swbg{display:flex}.swr.arm .swbg{background:#16a34a;color:#fff}#swtoast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(168px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:14px;background:#1d1d1b;color:#fff;border-radius:999px;padding:10px 10px 10px 18px;font-size:.9rem;box-shadow:0 6px 18px rgba(0,0,0,.25);white-space:nowrap}#swtoast button{border:0;background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer}
 .ck{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:transparent;color:var(--accfg);font-size:1rem;cursor:pointer}
 .row.done .ck{background:var(--acc);border-color:var(--acc)}
 .row.done .t{text-decoration:line-through;color:var(--mut)}
@@ -444,9 +444,42 @@ document.addEventListener('touchcancel',lpCancel);
 document.addEventListener('mousedown',e=>{const p=e.target.closest('.pill[data-sck],.pill[data-hist]');if(p)lpStart(p,e.clientX,e.clientY)});
 document.addEventListener('mouseup',lpCancel);
 document.addEventListener('contextmenu',e=>{if(e.target.closest('.pill'))e.preventDefault()});
-let sx=0,sy=0,sw=false;
-document.addEventListener('touchstart',e=>{sw=tab==='month'&&!!e.target.closest('#list')&&!$('#sheet').classList.contains('open');if(sw){sx=e.touches[0].clientX;sy=e.touches[0].clientY}},{passive:true});
-document.addEventListener('touchend',e=>{if(!sw)return;sw=false;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)>60&&Math.abs(dx)>1.5*Math.abs(dy)){if(calView==='week'){selDay=shiftDay(selDay,dx<0?7:-7);pickedDay=null}else{mOff+=dx<0?1:-1;pickedDay=null}render();const L=$('#list');L.classList.remove('sl','sr');void L.offsetWidth;L.classList.add(dx<0?'sl':'sr')}},{passive:true});
+let sx=0,sy=0,sw=false,swRow=false;
+document.addEventListener('touchstart',e=>{sw=tab==='month'&&!!e.target.closest('#list')&&!$('#sheet').classList.contains('open');if(sw){sx=e.touches[0].clientX;sy=e.touches[0].clientY;swRow=!!e.target.closest('.row[data-sw]')}},{passive:true});
+document.addEventListener('touchend',e=>{if(!sw)return;sw=false;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(swRow&&dx<0)return;if(Math.abs(dx)>60&&Math.abs(dx)>1.5*Math.abs(dy)){if(calView==='week'){selDay=shiftDay(selDay,dx<0?7:-7);pickedDay=null}else{mOff+=dx<0?1:-1;pickedDay=null}render();const L=$('#list');L.classList.remove('sl','sr');void L.offsetWidth;L.classList.add(dx<0?'sl':'sr')}},{passive:true});
+/* balayer une vignette vers la gauche = fait / à refaire */
+let sp=null,swBlock=0,toastT=null;
+function swToggle(kind,id,k){
+  if(kind==='td'){const x=todos.find(y=>y.id===id);if(!x)return null;const v=!x.done;todoPatch(id,{done:v});return v}
+  const t=tasks.find(x=>x.id===id);if(!t)return null;const dn={...(t.done||{})};dn[k]=!dn[k];patch(id,{done:dn});return dn[k];
+}
+function swToast(msg,undo){
+  let b=$('#swtoast');if(b)b.remove();clearTimeout(toastT);
+  b=document.createElement('div');b.id='swtoast';b.innerHTML='<span>'+msg+'</span><button type="button">Annuler</button>';
+  b.querySelector('button').onclick=()=>{undo();b.remove()};document.body.appendChild(b);
+  toastT=setTimeout(()=>b.remove(),4000);
+}
+function swEnd(e,cancel){
+  if(!sp||(e&&e.pointerId!==sp.id))return;const s=sp;sp=null;if(!s.on)return;
+  swBlock=Date.now();const w=s.r.parentNode,thr=Math.min(110,s.r.offsetWidth*.3);
+  s.r.style.transition='transform .2s ease';
+  if(!cancel&&s.dx<-thr){
+    s.r.style.transform='translateX(-110%)';
+    setTimeout(()=>{const d=s.r.dataset,v=swToggle(d.sw,d.id,d.k);if(v===null){render();return}
+      swToast(v?'✓ Marqué comme fait':'↩ Remis à faire',()=>swToggle(d.sw,d.id,d.k))},190);
+  }else{s.r.style.transform='';setTimeout(()=>w.classList.remove('swg','arm'),200)}
+}
+document.addEventListener('pointerdown',e=>{if(sp||e.button>0)return;const r=e.target.closest('.row[data-sw]');if(!r||e.target.closest('a'))return;sp={r,x:e.clientX,y:e.clientY,dx:0,on:false,id:e.pointerId}});
+document.addEventListener('pointermove',e=>{
+  if(!sp||e.pointerId!==sp.id)return;const dx=e.clientX-sp.x,dy=e.clientY-sp.y;
+  if(!sp.on){if(Math.abs(dy)>10&&Math.abs(dy)>=Math.abs(dx)){sp=null;return}
+    if(dx<-10&&Math.abs(dx)>Math.abs(dy)){sp.on=true;sp.r.style.transition='none';sp.r.parentNode.classList.add('swg');try{sp.r.setPointerCapture(e.pointerId)}catch(x){}}else return}
+  sp.dx=Math.min(0,dx);sp.r.style.transform='translateX('+sp.dx+'px)';
+  sp.r.parentNode.classList.toggle('arm',sp.dx<-Math.min(110,sp.r.offsetWidth*.3));
+});
+document.addEventListener('pointerup',e=>swEnd(e,false));
+document.addEventListener('pointercancel',e=>swEnd(e,true));
+document.addEventListener('click',e=>{if(Date.now()-swBlock<400){e.stopImmediatePropagation();e.preventDefault()}},true);
 async function addShop(close){
   const i=$('#s-in'),t=i.value.trim();if(!t){if(close)closeSheet();return}i.value='';justAdded.push(t);if(!close&&mode==='shopadd')drawPanel();
   if(db){try{await db.collection('shopping').add({t,r:guess(t),done:false,at:Date.now()})}catch(e){console.error(e)}}
@@ -504,12 +537,15 @@ const isOpen=(t,k)=>!(t.done||{})[k];
 const whoLabel=t=>(t.who&&t.who.length)?t.who.map(i=>ic(i)+esc(names[i])).join(' '):'Toute la famille';
 
 /* ---------- rendu ---------- */
+function rowBg(t){const w=(t.who||[]).filter(i=>i>=0&&i<names.length);if(!w.length)return '';return ' style="background:'+(w.length===1?colorOf(w[0]):'linear-gradient(100deg,'+w.map(colorOf).join(',')+')')+'"'}
+function swWrap(row,done){return '<div class="swr"><div class="swbg">'+(done?'↩ À refaire':'✓ Fait')+'</div>'+row+'</div>'}
 function rowHTML(t,k){
-  const d=(t.done||{})[k];
-  return '<div class="row'+(d?' done':'')+(t.kind==='vac'?' vac':'')+'">'+((t.kind==='vac'||t.kind==='ferie'||t.virt)?'':'<button class="ck" data-ck="'+t.id+'" data-k="'+k+'" aria-label="Fait">'+(d?'✓':'')+'</button>')
-   +'<div class="info" data-info="'+t.id+'"><div class="t">'+(t.ico||KINDS[t.kind||'task'][0])+' '+esc(t.t)+'</div><div class="m">'
-   +(t.dateEnd&&t.dateEnd>t.date?'du '+fs(t.date)+' au '+fs(t.dateEnd)+' · ':'')+(t.time?esc(t.time)+(t.end?'–'+esc(t.end):'')+' · ':'')+whoLabel(t)+(t.rep!=='once'?' · '+repLabel(t):'')
-   +'</div>'+(t.place?'<div class="m">📍 '+esc(t.place)+'</div>':'')+(t.note?'<div class="m">📝 '+esc(t.note)+'</div>':'')+'</div>'+(t.place?'<a class="more" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(t.place)+'" aria-label="Ouvrir dans Maps">📍</a>':'')+'</div>';
+  const d=(t.done||{})[k],fixed=(t.kind==='vac'||t.kind==='ferie'||t.virt),bg=t.kind==='vac'?'':rowBg(t);
+  const meta=[];if(t.dateEnd&&t.dateEnd>t.date)meta.push('du '+fs(t.date)+' au '+fs(t.dateEnd));if(t.time)meta.push(esc(t.time)+(t.end?'–'+esc(t.end):''));if(t.rep!=='once')meta.push(repLabel(t));
+  const row='<div class="row'+(d?' done':'')+(t.kind==='vac'?' vac':'')+(bg?' mc':'')+'"'+bg+(fixed?'':' data-sw="ev" data-id="'+t.id+'" data-k="'+k+'"')+'>'
+   +'<div class="info" data-info="'+t.id+'"><div class="t">'+(t.ico||KINDS[t.kind||'task'][0])+' '+esc(t.t)+'</div>'+(meta.length?'<div class="m">'+meta.join(' · ')+'</div>':'')
+   +(t.place?'<div class="m">📍 '+esc(t.place)+'</div>':'')+(t.note?'<div class="m">📝 '+esc(t.note)+'</div>':'')+'</div>'+(t.place?'<a class="more" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(t.place)+'" aria-label="Ouvrir dans Maps">📍</a>':'')+'</div>';
+  return fixed?row:swWrap(row,d);
 }
 let cfgItems=[],cfgMsg='';
 async function remapMembers(map){
@@ -669,7 +705,7 @@ function render(){
   } else if(tab==='todo'){
     const vis=todos.filter(todoSees),o=vis.filter(x=>!x.done).sort((a,b)=>(a.at||0)-(b.at||0)),dn=vis.filter(x=>x.done);
     h='<div class="shh"><b style="font-size:1.45rem">✅ To-do list</b><span>'+(vis.length?dn.length+' / '+vis.length+' faites':'Rien à faire')+'</span></div>'+(names.length?todoAv():'')+(vis.length?'<div class="bar2"><i style="width:'+(100*dn.length/vis.length)+'%"></i></div>':'')
-     +o.concat(dn).map(x=>'<div class="row'+(x.done?' done':'')+'"><button class="ck" data-tck="'+x.id+'">'+(x.done?'✓':'')+'</button><div class="info"><div class="t">'+esc(x.t)+'</div><div class="m">'+whoLabel(x)+'</div></div>'+((x.who&&x.who.length)?pbar(x):'')+'</div>').join('')
+     +o.concat(dn).map(x=>{const bg=rowBg(x);return swWrap('<div class="row'+(x.done?' done':'')+(bg?' mc':'')+'"'+bg+' data-sw="td" data-id="'+x.id+'"><div class="info"><div class="t">'+esc(x.t)+'</div></div></div>',x.done)}).join('')
      +(!todos.length?'<div class="empty">Rien à faire 🎉<br>Touchez le bouton + pour ajouter une tâche.</div>':(!vis.length?'<div class="empty">Rien à faire pour cette sélection 🎉</div>':''))
      +(dn.length?'<button class="link" id="td-clear">Retirer les tâches terminées</button>':'');
   } else if(tab==='shop'){
